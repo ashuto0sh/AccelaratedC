@@ -13,7 +13,7 @@ int main(){
 
 	int r=0;	//number of rows written
 
-	const std::string::size_type cols=2+greeting.size()+pad*2;
+	const std::string::size_type cols=2+greeting.size();
 
 	//loop invariant: we have written r rows of o/p so far
 	while(r<rows){
@@ -24,7 +24,7 @@ int main(){
 			if(r==0 || r==rows-1 || c==0 || c==cols-1){
 				std::cout<<"*";
 			}else {
-				if(r==pad+1 && c==pad+1){
+				if(r==pad+1 && c==1){
 					std::cout<<greeting;
 					c+=greeting.size()-1;
 				}
