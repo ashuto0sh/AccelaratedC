@@ -8,12 +8,13 @@ int main(){
 	std::string greeting="Hello, "+name+"!";
 
 	int pad=4;	//no of paddings to provide for the o/p frame
+	int colPad=2;
 	int rows=2*pad+3;	//1-greeting 2-top+bottom
 	std::cout<<std::endl;
 
 	int r=0;	//number of rows written
 
-	const std::string::size_type cols=2+greeting.size();
+	const std::string::size_type cols=2+greeting.size()+colPad*2;
 
 	//loop invariant: we have written r rows of o/p so far
 	while(r<rows){
@@ -24,7 +25,7 @@ int main(){
 			if(r==0 || r==rows-1 || c==0 || c==cols-1){
 				std::cout<<"*";
 			}else {
-				if(r==pad+1 && c==1){
+				if(r==pad+1 && c==colPad+1){
 					std::cout<<greeting;
 					c+=greeting.size()-1;
 				}
