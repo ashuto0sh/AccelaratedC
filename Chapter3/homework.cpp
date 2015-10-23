@@ -25,12 +25,20 @@ int main(){
 	int cnt=0;
 	double sum=0, x;
 
+	/* Little subtlity. using cin as condition in while loop.
+	 * The condition passes if we successfully read x. It fails 
+	 * on one of 3 ocassions:
+	 * 1. Reached end-of-file.
+	 * 2. Incompatible input.
+	 * 3. H/W failure on input device.
+	 */
 	while(cin>>x){
 		sum+=x;
 		cnt++;
 	}
 
 	streamsize prec=cout.precision();
+	//change precision to 3 significant digits
 	cout<<"Your final grade is "<<setprecision(3)<<0.2*mid+0.4*final+0.4*sum/cnt<<setprecision(prec)<<endl;
 
 	return 0;
