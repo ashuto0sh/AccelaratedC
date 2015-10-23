@@ -2,18 +2,18 @@
 #include <string>
 
 int main(){
-	/* contents of std::cout are buffered to be flushed 
-	 * only on one out of three ocassions:
-	 * 1. When a std::cin follows
-	 * 2. When buffer is full
-	 * 3. When explicitly told to do so. like writing std::endl
-	 */
 	std::cout<<"Please enter your first name: ";
-
 	std::string name;
 	std::cin>>name;
 
-	std::cout<<"Hello "<<name<<"!"<<std::endl;
+	std::string greeting="Hello, "+name+"!";
+
+	std::string spaces(greeting.length()+2, ' ');
+	std::cout<<std::string(greeting.length()+4, '*')<<std::endl;
+	std::cout<<"*"+spaces+"*"<<std::endl;
+	std::cout<<"* "+greeting+" *"<<std::endl;
+	std::cout<<"*"+spaces+"*"<<std::endl;
+	std::cout<<std::string(greeting.length()+4, '*')<<std::endl;
 
 	return 0;
 }
