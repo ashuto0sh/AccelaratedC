@@ -1,0 +1,61 @@
+<h1 id="value-categories-in-c">Value Categories in C++</h1>
+<h2 id="c98-rvalue-vs-lvalue">C++98 rvalue vs lvalue</h2>
+<p>Every expression in C++ is an lvalue or an rvalue. An <strong>lvalue</strong> is an <em>expression</em> upon which the operator&amp; (address of) is valid. Otherwise the <em>expression</em> result is temporary and is an <strong>rvalue</strong>.</p>
+<p>References are lvalues. References only make sense with lvalues so there is no idea of an rvalue reference. Modifiability is another aspect not to be confused with value categories.</p>
+<p>Temporaries could be captured as <strong>const lvalue references</strong>. This would extend the lifetime of the temporary but would not allow modification. (I wouldn’t answer if the const_cast would work here; that’s dirty C++). With <strong>modifiable rvalues</strong>, non-const member functions can be called on them.</p>
+<h3 id="example">Example:</h3>
+<pre class=" language-c"><code class="prism ++ language-c"><span class="token keyword">int</span><span class="token operator">&amp;</span> <span class="token function">foo</span><span class="token punctuation">(</span><span class="token keyword">int</span><span class="token operator">&amp;</span> i<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">return</span> i<span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">11</span><span class="token punctuation">;</span>
+<span class="token function">foo</span><span class="token punctuation">(</span>i<span class="token punctuation">)</span> <span class="token operator">=</span> <span class="token number">31</span><span class="token punctuation">;</span>	<span class="token comment" spellcheck="true">// result of calling foo is a modifiable lvalue</span>
+				<span class="token comment" spellcheck="true">// also, references are lvalues</span>
+i<span class="token operator">+</span>i <span class="token operator">=</span> <span class="token number">42</span><span class="token punctuation">;</span>		<span class="token comment" spellcheck="true">// i+i returns a temporary and does not persist beyond</span>
+				<span class="token comment" spellcheck="true">// this expression so it's an rvalue</span>
+<span class="token keyword">const</span> <span class="token keyword">int</span><span class="token operator">&amp;</span> iTemp <span class="token operator">=</span> <span class="token number">42</span><span class="token punctuation">;</span> <span class="token comment" spellcheck="true">// valid expression, iTemp is an lvalue</span>
+</code></pre>
+<h2 id="enter-c11-and-move-semantics">Enter C++11 and move semantics</h2>
+<p>Rvalue references were introduced into C++11 to capture rvalue temporaries in a way that allows modifying their value. This would allow applying move semantics to temporaries, which is to say that the resource’s state could be modified at convenience.</p>
+<h3 id="properties-of-rvalue-in-contrast-with-rvalue-references">Properties of rvalue in contrast with rvalue references</h3>
+<ol>
+<li>Rvalues do not have identity, rvalue references though designate an object in the memory.</li>
+<li>The type of an rvalue is fully known – that is, its type must be complete, and its static type is the same as its dynamic type. By contrast, an rvalue reference must support polymorphic behavior and should be able to have an incomplete type.</li>
+<li>The type of a non-class rvalue is never cv-qualified. An rvalue reference, however, can be bound to a const or volatile non-class object, and that qualification must be preserved.</li>
+</ol>
+<p>Unless we agree to treat rvalue references as one of the lvalue or rvalue and base a lot of special cases around the usage of &amp;&amp;s in expressions, this demands introduction of a separate set of value categories.</p>
+<h3 id="the-new-set-of-value-categories">The new set of value categories</h3>
+<ul>
+<li><strong>xvalues</strong> are the result of binding an rvalue reference to an object. This is inspired by the fact that rvalue references are supposedly used to move resources of the pointed object that is eXpiring.</li>
+<li><strong>lvalues</strong> are what they meant traditionally. xvalue is a value that you can treat as an lvalue, except that it is implicitly moveable from.</li>
+<li><strong>glvalues</strong> ie., generalized lvalues refer to the union of lvalue and xvalue.</li>
+<li><strong>prvalue</strong> are what traditionally used to be rvalues. These values as before have to be complete types.</li>
+<li><strong>rvalues</strong> are the union of xvalues and and prvalues.</li>
+</ul>
+<h3 id="examples">Examples</h3>
+<pre class=" language-c"><code class="prism ++ language-c"><span class="token keyword">struct</span> A <span class="token punctuation">{</span>
+	<span class="token function">A</span><span class="token punctuation">(</span><span class="token keyword">int</span><span class="token operator">&amp;&amp;</span> a<span class="token punctuation">)</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
+	<span class="token function">A</span><span class="token punctuation">(</span><span class="token keyword">const</span> <span class="token keyword">int</span><span class="token operator">&amp;</span> a<span class="token punctuation">)</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">;</span>
+<span class="token keyword">int</span><span class="token operator">&amp;&amp;</span> <span class="token function">foo</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+	<span class="token keyword">return</span> <span class="token number">42</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span class="token keyword">int</span><span class="token operator">&amp;&amp;</span> v <span class="token operator">=</span> <span class="token function">foo</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>	<span class="token comment" spellcheck="true">// here v is an xvalue</span>
+<span class="token operator">&amp;</span>v<span class="token punctuation">;</span>					<span class="token comment" spellcheck="true">// this is valid since v behaves as an lvalue too</span>
+A <span class="token function">a1</span><span class="token punctuation">(</span>v<span class="token punctuation">)</span><span class="token punctuation">;</span>			<span class="token comment" spellcheck="true">// will trigger a copy constructor, </span>
+					<span class="token comment" spellcheck="true">// xvalues are not implicitly movable</span>
+A <span class="token function">a2</span><span class="token punctuation">(</span><span class="token function">foo</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>		<span class="token comment" spellcheck="true">// triggers a move constructor, </span>
+					<span class="token comment" spellcheck="true">// since foo() returns an rvalue reference</span>
+A <span class="token function">a2</span><span class="token punctuation">(</span>std<span class="token punctuation">:</span><span class="token punctuation">:</span><span class="token function">move</span><span class="token punctuation">(</span>v<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>	<span class="token comment" spellcheck="true">// also triggers a move constructor, explicit cast</span>
+</code></pre>
+<p>Also, result of calling a function whose return type is not a reference is a prvalue:</p>
+<pre class=" language-c"><code class="prism ++ language-c"><span class="token keyword">int</span> <span class="token function">bar</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+ <span class="token keyword">return</span> <span class="token number">4</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+A <span class="token function">a3</span><span class="token punctuation">(</span><span class="token function">bar</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>	<span class="token comment" spellcheck="true">// triggers move constructor</span>
+</code></pre>
+<h3 id="set-of-rules-around-value-categories">Set of rules around value categories</h3>
+<ul>
+<li>Whenever a glvalue appears in a context where a prvalue is expected, the glvalue is converted to a prvalue.</li>
+<li>Prvalues shall always have complete types or the void type; in addition to these types, glvalues can also have incomplete types</li>
+</ul>
+<p><strong>[[To be done]]</strong></p>
